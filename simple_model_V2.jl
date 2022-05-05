@@ -14,10 +14,7 @@ using LinearAlgebra
 
 BLAS.set_num_threads(8)
 
-
-
-#define el hamiltoniano
-
+#Hamiltonian
 function Hamiltonian(sites, λ::Float64, k::Float64)
 
     N = length(sites)
@@ -31,49 +28,32 @@ function Hamiltonian(sites, λ::Float64, k::Float64)
         ampo += -0.5, "S+",j
         ampo += -0.5, "S-",j
     end
-#  Convert these terms to an MPO tensor network
   return MPO(ampo, sites)
 end
 
 
 
-
 let
   #-----------------------------------------------------------------------
-  #Chequea que no exista el archivo stop, el cual mata la corrida del DMRG
   if isfile("stop")==true
-      println("\n Borrar el archivo stop!")
+      println("\n Delete stop archive!")
       stop()
   end
 
-  #parametros del modelo
+  #Models parameters
   N = 20
   λ = 0.1
   k = 0.5
+    
+  sites = siteinds("S=1/2",N;conserve_qns=false)
+  
 
-
-  #algoritmo para SVD ("divide_and_conquer" ,"qr_iteration", "recursive")
-  # divide_and_conquer (pred) a veces tiene problema con matrices mal condicionadas
-  # por eso dejo como usado a este, que es más lento
-  # ver de cambiar este alg para hamiltoniano no hermitico
+  #dmrg parameters
   alg = "qr_iteration"
-
-  #parametros del dmrg
   sweeps = Sweeps(1000)
   minsweeps = 5
-  maxdim!(sweeps, 50,100,200)
-  #cutoff!(sweeps, 1E-12)
-  etol=1E-12  #tolerancia de energia
-
-  #-----------------------------------------------------------------------
-
-
- sites = siteinds("S=1/2",N;conserve_qns=false)
-#-----------------------------------------------------------------------
-#Observadores de energía
-#obs = DMRGObserver(["Sz"], sites; energy_tol=etol,minsweeps=minsweeps)
-#obs = DemoObserver(etol)  #defino el operador observador de energia
-#-----------------------------------------------------------------------
+  etol=1E-6
+    
 #Estado inicial
 state = ["Emp" for n in 1:N]
 p = N
@@ -93,9 +73,8 @@ psi0 = randomMPS(sites, state)
 #-----------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-
 H = Hamiltonian(sites, λ, k)
- #-----------------------------------------------------------------------
+#-----------------------------------------------------------------------
 
 #obs = DMRGObserver(["Sz"], sites; energy_tol=etol,minsweeps=minsweeps)
 obs = DMRGObserver(; energy_tol=etol, minsweeps=2)

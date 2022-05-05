@@ -156,6 +156,10 @@ function measure!(obs::DMRGObserver; kwargs...)
 end
 
 function checkdone!(o::DMRGObserver; kwargs...)
+  if isfile("stop") == true
+    println("\n Stopping DMRG by archive \n")
+    return true
+  end
   outputlevel = get(kwargs, :outputlevel, false)
   if (
     length(real(energies(o))) > o.minsweeps &&
